@@ -1,0 +1,9 @@
+%h2
+  Recommendations for user
+  = @user
+%p
+  %ol
+    - @items.each do |item|
+      %li= item
+%p
+  %a(href="/") Enter another
