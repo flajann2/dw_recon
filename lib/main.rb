@@ -33,6 +33,8 @@ module Main
       end
     end
 
+    load_data :test
+
     assets do
       serve '/js',      from: 'app/js'           # Default
       serve '/css',     from: 'app/css'          # Default
