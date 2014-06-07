@@ -1,4 +1,6 @@
 # Recommendation Algorithm
+require 'smarter_csv'
+require_relative 'minhash'
 
 module Recommendation
   def recommend(user)
@@ -16,9 +18,18 @@ module Recommendation
 
     def load_data(*csvs)
       @datapath ||= 'db'
-      csvs.map do |csv|
+      @data = csvs.map { |csv|
         File.expand_path("#{csv}.csv", @datapath)
-      end.each { |p| puts p }
+      }.map { |p|
+        SmarterCSV.process(p, col_sep: ';', strip_whitespace: true)
+        .inject(Hash.new{|h,k| h[k] = []}) { |memo, row|
+          memo[row[:userid]] << row[:productid]
+          memo
+        }
+      }.inject({}) { |memo, hsh|
+        memo.merge hsh
+      }
+      pp @data
     end
   end
 end

@@ -33,7 +33,7 @@ module Main
       end
     end
 
-    load_data :test
+    load_data :test, :test2
 
     assets do
       serve '/js',      from: 'app/js'           # Default
