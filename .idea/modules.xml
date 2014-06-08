@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/dw_recom.iml" filepath="$PROJECT_DIR$/.idea/dw_recom.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../rubyneat_dashboard/.idea/rubyneat_dashboard.iml" filepath="$PROJECT_DIR$/../../rubyneat_dashboard/.idea/rubyneat_dashboard.iml" />
     </modules>
   </component>
 </project>
