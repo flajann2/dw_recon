@@ -22,11 +22,17 @@ module Recommendation
       @datapath = path
     end
 
-    def load_data(*csvs)
-      @datapath ||= 'db'
+    def recbase
       @recbase ||= RecBase.new
+    end
+
+    def datapath
+      @datapath ||= 'db'
+    end
+
+    def load_data(*csvs)
       @data = csvs.map { |csv|
-        File.expand_path("#{csv}.csv", @datapath)
+        File.expand_path("#{csv}.csv", datapath)
       }.map { |p|
         SmarterCSV.process(p, col_sep: ';', strip_whitespace: true)
         .inject(Hash.new{|h,k| h[k] = SortedSet.new}) { |memo, row|
@@ -37,7 +43,11 @@ module Recommendation
         memo.merge hsh
       }
       pp @data
-      @recbase.add_history @data
+      recbase.add_history @data
+    end
+
+    def rec_options(**opts)
+      recbase.set_options **opts
     end
   end
 end

@@ -2,6 +2,18 @@ require 'set'
 require 'pp'
 
 module MinHash
+  # Set all the options MimHash will use.
+  # Current options are:
+  #- :permutations -- number of permutations to use in MinHash
+  #-
+  def set_options(**opts)
+    opts.each{|var, opt| instance_variable_set "@#{var}".to_sym, opt }
+  end
+
+  def universe
+    @universe ||= SortedSet.new
+  end
+
   # Add history of 'clicks' in the form of userid: [history]
   # hashes to the MinHash.
   #
@@ -9,9 +21,8 @@ module MinHash
   # a singular hash.
   def add_history(*hist, &block)
     hist << block.() if block_given?
-    @universe ||= SortedSet.new
-    hist.each { |hsh| hsh.each { |user, activiy| @universe.merge activiy}}
-    pp @universe
+    hist.each { |hsh| hsh.each { |user, activiy| universe.merge activiy}}
+    pp universe
   end
 
   # Delete history -- here for completeness, though
