@@ -42,7 +42,6 @@ module Recommendation
       }.inject({}) { |memo, hsh|
         memo.merge hsh
       }
-      pp @data
       recbase.add_history @data
     end
 
