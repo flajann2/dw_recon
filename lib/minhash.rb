@@ -10,7 +10,7 @@ module MinHash
   # TODO: add checking for options' validity. It really should complain
   # TODO: if an option is invalid.
   def set_options(**opts)
-    opts.each{|var, opt| instance_variable_set "@#{var}".to_sym, opt }
+    opts.each{|var, opt| self.instance_variable_set "@#{var}".to_sym, opt }
   end
 
   def self.included(mod)
@@ -71,11 +71,15 @@ module MinHash
     n
   end
 
-  # f is the permute function number, which will then iterate the
-  # permuted indicies for that function.
+  RRANGE = 1000000000
+
   def permute
     prime = next_prime_after
-    0..permutations
+    (0...permutations).map{|pf| [pf, rand(RRANGE)+1, rand(RRANGE)+1]}
+    .each{ |pf, a, b|
+      (0...universe.size)
+      .each{ |ux| yield pf, ux, ((a * ux + b) % prime) % universe.size }
+    }
   end
 
   # Compute the minhash given the current data.
@@ -84,7 +88,15 @@ module MinHash
   # TODO: add logic to compute minhash incrementally.
   def compute_minhash
     clear_minhash
-
+    permute { |pf, ux, permuted|
+      pp [pf, ux, permuted]
+      history.each{|user, hist|
+        if hist.member? universe[permuted]
+          minhash[user][pf] = permuted if permuted < minhash[user][pf]
+        end
+      }
+    }
+    pp 'minhash =', minhash
   end
 
   # We wish to add indexability to the sorted set.

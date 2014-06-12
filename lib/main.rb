@@ -34,8 +34,8 @@ module Main
     end
 
     # recommendation DSL
-    load_data :test, :test2
-    rec_options permutations: 3
+    rec_options permutations: 4
+    load_data :test #, :test2
 
     assets do
       serve '/js',      from: 'app/js'           # Default

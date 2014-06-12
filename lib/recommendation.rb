@@ -43,6 +43,7 @@ module Recommendation
         memo.merge hsh
       }
       recbase.add_history @data
+      recbase.compute_minhash
     end
 
     def rec_options(**opts)
