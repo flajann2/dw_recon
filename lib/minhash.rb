@@ -7,21 +7,35 @@ module MinHash
   # Current options are:
   #- :permutations -- number of permutations to use in MinHash
   #-
+  # TODO: add checking for options' validity. It really should complain
+  # TODO: if an option is invalid.
   def set_options(**opts)
     opts.each{|var, opt| instance_variable_set "@#{var}".to_sym, opt }
   end
 
-  def universe
-    @universe ||= SortedSet.new
-  end
+  def self.included(mod)
+    # We need variables that can set themselves to default objects.
+    # This is an effective way to accomplish that.
+    # TODO: create a gem to do this in a cleaner fashion.
+    {
+        universe:     %{ SortedSet.new }, # Universe of elements to compute the minhahs over.
+        history:      %{ Hash.new },      # History of the user's activities to compute the minhash on.
+        permutations: %{ 5 },             # number of hash functions for permutations
+        minhash:      %{
+          Hash.new do |hash, key|
+            hash[key] = Array.new(permutations, Float::INFINITY)
+          end
+        }
+    }.each_pair do |sym, func|
+      mod.class_eval <<-EOF
+        def #{sym}
+          @#{sym} ||= #{func}
+        end
 
-  def history
-    @history ||= {}
-  end
-
-  def minhash
-    @minhash ||= Hash.new do |hash, key|
-      hash[key] = Array.new(permutations, Float::INFINITY)
+        def clear_#{sym}
+          @#{sym} = nil
+        end
+      EOF
     end
   end
 
@@ -48,6 +62,7 @@ module MinHash
 
   # For permutation hashes, we need to pick the next prime bigger than
   # the universe size.
+  # NOTE WELL: This is an expensive operation.
   def next_prime_after(n = universe.size)
     n += 1 unless n.odd?
     while not n.prime?
@@ -56,11 +71,19 @@ module MinHash
     n
   end
 
+  # f is the permute function number, which will then iterate the
+  # permuted indicies for that function.
+  def permute
+    prime = next_prime_after
+    0..permutations
+  end
+
   # Compute the minhash given the current data.
   # The number of permutations will be, obviously,
   # the number of hashes per user.
+  # TODO: add logic to compute minhash incrementally.
   def compute_minhash
-    @minhash = nil # Erase old minhash first, start afresh. TODO: add logic to compute minhash incrementally
+    clear_minhash
 
   end
 
