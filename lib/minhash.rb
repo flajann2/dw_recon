@@ -3,6 +3,8 @@ require 'pp'
 require 'prime'
 
 module MinHash
+  include Math
+
   # Set all the options MimHash will use.
   # Current options are:
   #- :permutations -- number of permutations to use in MinHash
@@ -25,7 +27,19 @@ module MinHash
           Hash.new do |hash, key|
             hash[key] = Array.new(permutations, Float::INFINITY)
           end
-        }
+        },
+        buckets:      %{ 50 },
+        bands:        %{ 10 },
+        bucket_ar:    %{
+          Hash.new do |hash, num|
+            hash[num] = Set.new
+          end
+        },
+        user_buckets: %{
+          Hash.new do |hash, key|
+            hash[key] = Set.new
+          end
+        },
     }.each_pair do |sym, func|
       mod.class_eval <<-EOF
         def #{sym}
@@ -64,6 +78,7 @@ module MinHash
   # the universe size.
   # NOTE WELL: This is an expensive operation.
   def next_prime_after(n = universe.size)
+    n = sqrt(n).ceil
     n += 1 unless n.odd?
     while not n.prime?
       n += 2
@@ -71,32 +86,69 @@ module MinHash
     n
   end
 
-  RRANGE = 1000000000
+  RRANGE = 100000000
+  SRANGE = 1000
 
   def permute
     prime = next_prime_after
-    (0...permutations).map{|pf| [pf, rand(RRANGE)+1, rand(RRANGE)+1]}
-    .each{ |pf, a, b|
+    primesq = prime * prime
+    (0...permutations).map{|pf| [pf, rand(1..SRANGE)*prime, rand(1..RRANGE), rand(1..RRANGE)]}
+    .each{ |pf, a, b, c|
       (0...universe.size)
-      .each{ |ux| yield pf, ux, ((a * ux + b) % prime) % universe.size }
+      .each{ |ux| yield pf, ux, ((a * ux ** 2 + b * ux + c) % primesq) % universe.size }
     }
   end
 
   # Compute the minhash given the current data.
   # The number of permutations will be, obviously,
   # the number of hashes per user.
+  #
+  # This also computes the LSH.
   # TODO: add logic to compute minhash incrementally.
+  #
+  # pf -- permute fuction (integer)
+  # ux -- index
+  # permuted -- ux bijective mapping (we hope!)
   def compute_minhash
     clear_minhash
     permute { |pf, ux, permuted|
-      pp [pf, ux, permuted]
+      puts "[pf #{pf} ux #{ux} perm #{permuted}]"
       history.each{|user, hist|
         if hist.member? universe[permuted]
           minhash[user][pf] = permuted if permuted < minhash[user][pf]
         end
       }
     }
-    pp 'minhash =', minhash
+    pp minhash
+    compute_lsh
+  end
+
+  # This hashes the given numbers (presumably from a band), using a 'function'
+  # generated from the funct number.
+  #
+  # The generated number here is an index to the bucket to use.
+  def lsh_hash(funct, *v)
+    v.inject(101){|memo, i| memo *(i ** funct + funct)} % buckets
+  end
+
+  # minhash must have already been computed before this is called.
+  # NOTE WELL: permutations should be a multiple of bands for this to work
+  def compute_lsh
+    rows_per_band = permutations / bands
+    raise "permutations #{permutations} not a multiple of bands #{bands}" unless rows_per_band * bands == permutations
+    minhash.each{ |user, hsh|
+      hsh = hsh.clone
+      (1..bands).each{ |funct|
+        bucket_ar[b = lsh_hash(funct, *hsh.shift(rows_per_band))] << user
+        user_buckets[user] << bucket_ar[b]
+      }
+    }
+    pp user_buckets
+  end
+
+  def similar(u1, u2)
+    s1 = minhash[u1]
+    s2 = minhash[u2]
   end
 
   # We wish to add indexability to the sorted set.
