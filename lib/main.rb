@@ -35,7 +35,7 @@ module Main
 
     # recommendation DSL
     rec_options permutations: 12, buckets: 1001, bands: 4
-    load_data :test, :test2
+    load_data :test #, :test2
 
     assets do
       serve '/js',      from: 'app/js'           # Default
@@ -48,7 +48,8 @@ module Main
     end
 
     post '/recom' do
-      @items = recommend(@user = params[:user])
+      @recommendations = recommend(@user = params[:user].to_i)
+      @items = recommend_list(@recommendations)
       haml :recommend
     end
 

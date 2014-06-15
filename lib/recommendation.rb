@@ -1,12 +1,27 @@
 # Recommendation Algorithm
-require 'pp'
 require 'set'
 require 'smarter_csv'
 require_relative 'minhash'
 
 module Recommendation
   def recommend(user)
-    [11,22,33,44,55]
+    recbase.get_similar_users(user)
+    .map{ |u| [u, recbase.history[u].to_a, recbase.similarity(user, u)]}
+    .sort{ |a, b| b.last <=> a.last}
+    .reject{ |item| item.last < 0.0000001 }
+  end
+
+  # Given the recommendation deta
+  def recommend_list(details)
+    SortedSet.new details.map{|u, lst, sim| lst}.flatten
+  end
+
+  def all_users
+    recbase.minhash.keys.sort
+  end
+
+  def recbase
+    self.class.recbase
   end
 
   def self.included(base)

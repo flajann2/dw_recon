@@ -1,5 +1,4 @@
 require 'set'
-require 'pp'
 require 'prime'
 
 module MinHash
@@ -53,6 +52,12 @@ module MinHash
     end
   end
 
+  def similarity(u1, u2)
+    s1 = history[u1]
+    s2 = history[u2]
+    s1.intersection(s2).size.to_f / s1.union(s2).size.to_f
+  end
+
   # Add history of 'clicks' in the form of userid: [history]
   # hashes to the MinHash.
   #
@@ -64,8 +69,6 @@ module MinHash
       hsh.each { |user, activiy| universe.merge activiy}
       history.merge! hsh
     }
-    pp universe
-    pp history
   end
 
   # Delete history -- here for completeness, though
@@ -119,7 +122,6 @@ module MinHash
         end
       }
     }
-    pp minhash
     compute_lsh
   end
 
@@ -143,12 +145,10 @@ module MinHash
         user_buckets[user] << bucket_ar[b]
       }
     }
-    pp user_buckets
   end
 
-  def similar(u1, u2)
-    s1 = minhash[u1]
-    s2 = minhash[u2]
+  def get_similar_users(user)
+    user_buckets[user].flatten - Set[user]
   end
 
   # We wish to add indexability to the sorted set.

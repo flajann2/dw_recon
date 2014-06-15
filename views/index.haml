@@ -2,6 +2,11 @@
 Please enter in a user ID, and items will be recommended
 for the user.
 %p
+User List
+%ul
+  - all_users.each do |user|
+    %li= user
+
 %form(name="input" action="/recom" method="post")
   %input(type="text" name="user")
   %input(type="submit" value="Submit" )

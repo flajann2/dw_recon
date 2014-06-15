@@ -7,3 +7,16 @@
       %li= item
 %p
   %a(href="/") Enter another
+
+%h3 Diagostics
+%p
+  %table
+    %tr
+      %td user
+      %td list
+      %td similarity
+    - @recommendations.each do |user, lst, sim|
+      %tr
+        %td= user
+        %td= lst
+        %td= sim
