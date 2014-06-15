@@ -1,5 +1,11 @@
 Notes on Implementation, and considerations.
 
+
+* To run this, do a bundle install in the root directory of the project,
+  and then do
+
+  ruby lib/main.rb
+
 * This implementation includes both the MinHashing and the LSH banding.
 * An issue is that the dataset for this is way too small for realistic testing,
   so I created additional data. That can be found in the load_data DSL
